@@ -1,4 +1,25 @@
-# keel
+```ascii
+                                                                                  
+kkkkkkkk                                                                  lllllll 
+k::::::k                                                                  l:::::l 
+k::::::k                                                                  l:::::l 
+k::::::k                                                                  l:::::l 
+ k:::::k    kkkkkkk         eeeeeeeeeeee             eeeeeeeeeeee          l::::l 
+ k:::::k   k:::::k        ee::::::::::::ee         ee::::::::::::ee        l::::l 
+ k:::::k  k:::::k        e::::::eeeee:::::ee      e::::::eeeee:::::ee      l::::l 
+ k:::::k k:::::k        e::::::e     e:::::e     e::::::e     e:::::e      l::::l 
+ k::::::k:::::k         e:::::::eeeee::::::e     e:::::::eeeee::::::e      l::::l 
+ k:::::::::::k          e:::::::::::::::::e      e:::::::::::::::::e       l::::l 
+ k:::::::::::k          e::::::eeeeeeeeeee       e::::::eeeeeeeeeee        l::::l 
+ k::::::k:::::k         e:::::::e                e:::::::e                 l::::l 
+k::::::k k:::::k        e::::::::e               e::::::::e               l::::::l
+k::::::k  k:::::k        e::::::::eeeeeeee        e::::::::eeeeeeee       l::::::l
+k::::::k   k:::::k        ee:::::::::::::e         ee:::::::::::::e       l::::::l
+kkkkkkkk    kkkkkkk         eeeeeeeeeeeeee           eeeeeeeeeeeeee       llllllll
+                                                                                  
+
+```
+
 
 install → keel init → keel config --api-key sk-... → keel run aider
 
