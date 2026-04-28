@@ -1,4 +1,4 @@
-<div align="center">
+<center>
 
 ```ascii
                                                                      
@@ -11,7 +11,7 @@
  ▀▀   ▀▀▀              ▀▀▀▀▀               ▀▀▀▀▀                ▀▀▀▀  
 
 ```
-</div>
+</center>
 
 install → keel init → keel config --api-key sk-... → keel run aider
 
