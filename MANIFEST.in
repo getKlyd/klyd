@@ -1,0 +1,2 @@
+include hooks/*.sh
+include AGENTS.md.txt
