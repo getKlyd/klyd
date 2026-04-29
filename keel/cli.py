@@ -65,8 +65,9 @@ def config(api_key, openai_key, openrouter_key, gemini_key, groq_key, model):
         click.echo("keel config --api-key ... --openai-key ... --model ...")
 
 @cli.command(context_settings={"ignore_unknown_options": True})
+@click.option('--no-inject', is_flag=True, help='Skip generating injection file')
 @click.argument('cmd', nargs=-1, type=click.UNPROCESSED)
-def run(cmd):
+def run(no_inject, cmd):
     """Run an agent with injected architectural memory."""
     if not cmd:
         click.echo("Usage: keel run <agent> [args...]")
@@ -75,6 +76,13 @@ def run(cmd):
     keel_dir = Path('.keel')
     inj_path = keel_dir / 'injection.txt'
     
+    if not no_inject:
+        try:
+            ctx = click.get_current_context()
+            ctx.invoke(prepare_injection)
+        except Exception as e:
+            pass
+            
     run_cmd = list(cmd)
     
     if inj_path.exists() and inj_path.stat().st_size > 0:
