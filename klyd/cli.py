@@ -25,6 +25,7 @@ class KlydGroup(click.Group):
         console.print(r"[cyan]888  \         888              Y8Y          888    | [/cyan]")
         console.print(r"[cyan]888   \        888               Y           888   /  [/cyan]")
         console.print(r"[cyan]888    \       888____          /            888_-~   [/cyan]")
+        console.print(r"[dim]        (An open-source project, not affiliated with the Klyd SaaS)[/dim]")
         console.print()
         super().format_help(ctx, formatter)
 
@@ -50,6 +51,7 @@ def init():
     console.print(r"[cyan bold]8 8888 `Y8.               8 8888                          8 8888                8 8888        ,88' [/cyan bold]")
     console.print(r"[cyan bold]8 8888   `Y8.             8 8888                          8 8888                8 8888    ,o88P'   [/cyan bold]")
     console.print(r"[cyan bold]8 8888     `Y8.           8 888888888888                  8 8888                8 888888888P'      [/cyan bold]")
+    console.print(r"                   [dim](An open-source project, not affiliated with the Klyd SaaS)[/dim]")
     console.print()
     try:
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
