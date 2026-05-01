@@ -11,7 +11,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.rule import Rule
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.columns import Columns
+from rich.prompt import Prompt
+from rich.text import Text
 import rich.box
 
 console = Console()
@@ -60,11 +62,9 @@ def init():
     console.print()
     console.print()
     try:
-        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="Creating .klyd directory, database, and hooks...", total=None)
+        with console.status("[bold cyan]Creating .klyd directory, database, and hooks...[/bold cyan]", spinner="dots12"):
             install_hooks()
             init_config()
-            # Init DB as well
             klyd_dir = Path('.klyd')
             db_path = klyd_dir / 'memory.db'
             from .db import init_db
@@ -72,7 +72,7 @@ def init():
             
         console.print(Panel(
             "Klyd harness initialised in [cyan].klyd[/cyan]\n\n[dim]Installed git hooks for automatic extraction.[/dim]\n[dim]Errors are logged to .klyd/errors.log[/dim]",
-            title="Success", border_style="green"
+            title="[bold green]SUCCESS[/bold green]", border_style="green", padding=(1, 2)
         ))
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
@@ -90,19 +90,21 @@ def config(api_key, openai_key, openrouter_key, gemini_key, groq_key, model, sho
     """Set klyd configuration."""
     if show:
         cfg = get_all_config()
-        table = Table(title="Klyd Configuration", box=rich.box.SIMPLE)
+        table = Table(title="[bold cyan]klyd Configuration[/bold cyan]", box=rich.box.SIMPLE, header_style="bold cyan")
         table.add_column("Key", style="cyan")
         table.add_column("Value", style="green")
-        for k, v in cfg.items():
-            if 'key' in k and v:
-                v = v[:4] + '*' * (len(v) - 8) + v[-4:] if len(v) > 8 else '*' * len(v)
-            table.add_row(k, v)
+        if not cfg:
+            table.add_row("[dim]No configuration set[/dim]", "[dim]Run: kl config --api-key ...[/dim]")
+        else:
+            for k, v in cfg.items():
+                if 'key' in k and v:
+                    v = v[:4] + '*' * (len(v) - 8) + v[-4:] if len(v) > 8 else '*' * len(v)
+                table.add_row(k, v)
         console.print(table)
         return
 
     changes = False
-    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-        task = progress.add_task(description="Saving configuration...", total=None)
+    with console.status("[bold cyan]Saving configuration...[/bold cyan]", spinner="dots12"):
         if api_key:
             set_config('api_key', api_key)
             changes = True
@@ -123,9 +125,9 @@ def config(api_key, openai_key, openrouter_key, gemini_key, groq_key, model, sho
             changes = True
             
     if changes:
-        console.print(Panel(" Configuration saved.", border_style="green"))
+        console.print(Panel("[bold green]Configuration saved successfully[/bold green]", title="[bold green]DONE[/bold green]", border_style="green", expand=False))
     else:
-        console.print("[yellow]Usage:[/yellow] klyd config --api-key ... --openai-key ... --model ...\nOr use --show to display current configuration.")
+        console.print("[yellow]Usage:[/yellow] kl config --api-key ... --openai-key ... --model ...\nOr use --show to display current configuration.")
 
 @cli.command(context_settings={"ignore_unknown_options": True})
 @click.option('--no-inject', is_flag=True, help='Skip generating injection file')
@@ -133,15 +135,14 @@ def config(api_key, openai_key, openrouter_key, gemini_key, groq_key, model, sho
 def run(no_inject, cmd):
     """Run an agent with injected architectural memory."""
     if not cmd:
-        console.print("Usage: klyd run <agent> [args...]")
+        console.print("Usage: kl run <agent> [args...]")
         return
         
     klyd_dir = Path('.klyd')
     inj_path = klyd_dir / 'injection.txt'
     
     if not no_inject:
-        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="Preparing injection context...", total=None)
+        with console.status("[bold cyan]Preparing injection context...[/bold cyan]", spinner="dots12"):
             try:
                 ctx = click.get_current_context()
                 ctx.invoke(prepare_injection)
@@ -157,11 +158,11 @@ def run(no_inject, cmd):
         elif agent_name == 'opencode':
             run_cmd.extend(['-m', inj_path.read_text()])
             
-    console.print(Panel(f"Launching {agent_name}...", border_style="blue", expand=False))
+    console.print(Panel(f"[bold cyan]Launching[/bold cyan] {agent_name}...", title="[bold blue]AGENT START[/bold blue]", border_style="blue", expand=False))
     
     try:
         subprocess.run(run_cmd)
-        console.print(Panel("Agent session ended.", border_style="green", expand=False))
+        console.print(Panel("[bold green]Agent session ended[/bold green]", title="[bold green]DONE[/bold green]", border_style="green", expand=False))
     except FileNotFoundError:
         console.print(f"[red]Command not found: {cmd[0]}[/red]")
 
@@ -176,7 +177,6 @@ def extract_commit():
         return
         
     try:
-        # Get git info
         try:
             diff = subprocess.check_output(['git', 'diff', 'HEAD~1', 'HEAD'], text=True)
             msg = subprocess.check_output(['git', 'log', '-1', '--format=%B'], text=True)
@@ -184,7 +184,6 @@ def extract_commit():
             files = [f for f in files_out.strip().split('\n') if f]
             commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
         except subprocess.CalledProcessError:
-            # Initial commit fallback
             diff = subprocess.check_output(['git', 'show', 'HEAD'], text=True)
             msg = subprocess.check_output(['git', 'log', '-1', '--format=%B'], text=True)
             files_out = subprocess.check_output(['git', 'show', '--name-only', '--format=', 'HEAD'], text=True)
@@ -194,9 +193,7 @@ def extract_commit():
         if not files:
             return
 
-        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="Extracting decisions...", total=None)
-            
+        with console.status("[bold cyan]Extracting architectural decisions via LLM...[/bold cyan]", spinner="dots12"):
             db_path = str(klyd_dir / 'memory.db')
             existing = get_decisions_for_files(db_path, files, top_k=20)
             existing_json = json.dumps(existing, indent=2)
@@ -213,7 +210,6 @@ def extract_commit():
                 event = d.get('event_type')
                 
                 if event == 'REINFORCE':
-                    # Find matching decision to reinforce
                     match = next((e for e in existing if e['module'] == d['module'] and e['decision'] == d['decision']), None)
                     if match:
                         reinforce_decision(db_path, match['id'], commit_hash)
@@ -230,7 +226,16 @@ def extract_commit():
                     store_decision(db_path, d)
                     new_count += 1
                     
-        console.print(f"[green]Decisions extracted: {new_count} new, {reinforced_count} reinforced[/green]")
+        if new_count > 0 or reinforced_count > 0:
+            console.print(Panel(
+                f"[bold green]{new_count}[/bold green] new decisions extracted\n[bold yellow]{reinforced_count}[/bold yellow] decisions reinforced",
+                title="[bold cyan]EXTRACTION COMPLETE[/bold cyan]", border_style="cyan", expand=False
+            ))
+        else:
+            console.print(Panel(
+                "[dim]No architectural decisions found in this commit[/dim]",
+                title="[dim]EXTRACTION COMPLETE[/dim]", border_style="dim", expand=False
+            ))
 
     except Exception as e:
         err_log = klyd_dir / 'errors.log'
@@ -249,8 +254,7 @@ def prepare_injection():
         return
         
     try:
-        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True, console=console) as progress:
-            progress.add_task(description="Preparing injection context...", total=None)
+        with console.status("[bold cyan]Preparing injection context...[/bold cyan]", spinner="dots12"):
             files_out = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True)
             files = [f for f in files_out.strip().split('\n') if f]
             
@@ -266,7 +270,7 @@ def prepare_injection():
             with open(klyd_dir / 'injection.txt', 'w') as f:
                 f.write(injection)
                 
-        console.print("[green]Injection written to .klyd/injection.txt[/green]")
+        console.print(Panel("[green]Injection file ready at .klyd/injection.txt[/green]", border_style="green", expand=False))
             
     except Exception as e:
         with open(klyd_dir / 'errors.log', 'a') as f:
@@ -281,60 +285,88 @@ def review():
     klyd_dir = Path('.klyd')
     db_path = klyd_dir / 'memory.db'
     if not db_path.exists():
-        console.print("[red]klyd is not initialized. Run `klyd init`.[/red]")
+        console.print("[bold red]klyd is not initialized. Run `kl init`.[/bold red]")
         return
 
     db_str = str(db_path)
     flagged = get_flagged_decisions(db_str)
     
     if not flagged:
-        console.print("[green bold] No conflicts to review.[/green bold]")
+        console.print(Panel(
+            "[bold green]All conflicts resolved. Memory is clean.[/bold green]",
+            title="[bold green]NO CONFLICTS[/bold green]", border_style="green", expand=False
+        ))
         return
 
-    for d in flagged:
+    for i, d in enumerate(flagged):
         console.print()
-        console.print(Panel(f"Module: [cyan bold]{d['module']}[/cyan bold]", title="[bold red]! CONFLICT DETECTED[/bold red]", border_style="red"))
+        console.print(f"[bold cyan]Conflict {i+1} of {len(flagged)}[/bold cyan] in module: [bold white]{d['module']}[/bold white]")
         
         commit_ref = d.get('last_seen_commit') or "unknown commit"
-        new_panel = Panel(f"{d['decision']}\n\n[dim cyan](from commit {commit_ref[:7]})[/dim cyan]", title="New", border_style="cyan")
         
         active = get_active_decisions_by_module(db_str, d['module'])
         old_id = None
         if active:
             old = active[0]
             old_id = old['id']
-            old_panel = Panel(f"{old['decision']}\n\n[dim cyan]({old['confidence']} confidence, x{old['reinforcement_count']})[/dim cyan]", title="Existing", border_style="white")
+            conf_color = "bold bright_green" if old['confidence'] == 'HIGH' else ("bold bright_yellow" if old['confidence'] == 'MEDIUM' else "dim white")
+            old_panel = Panel(
+                f"{old['decision']}\n\n[dim]([/dim][{conf_color}]{old['confidence']}[/{conf_color}][dim] | reinforced x{old['reinforcement_count']})[/dim]",
+                title="[bold yellow]Existing Memory[/bold yellow]",
+                border_style="yellow",
+                expand=True
+            )
         else:
-            old_panel = Panel("(none)", title="Existing", border_style="white")
+            old_panel = Panel(
+                "\n[dim]No existing memory found.[/dim]\n",
+                title="[bold yellow]Existing Memory[/bold yellow]",
+                border_style="yellow",
+                expand=True
+            )
 
-        console.print(old_panel)
-        console.print(new_panel)
+        new_conf_color = "bold bright_green" if d['confidence'] == 'HIGH' else ("bold bright_yellow" if d['confidence'] == 'MEDIUM' else "dim white")
+        new_panel = Panel(
+            f"{d['decision']}\n\n[dim]([/dim][{new_conf_color}]{d['confidence']}[/{new_conf_color}][dim] | commit {commit_ref[:7]})[/dim]",
+            title="[bold red]New Conflicting Extraction[/bold red]",
+            border_style="red",
+            expand=True
+        )
+
+        console.print(Columns([old_panel, new_panel]))
         
-        console.print(Rule(style="dim"))
-        console.print("[green bold][a][/green bold] Accept new decision (archive old)")
-        console.print("[red bold][r][/red bold] Reject new decision (keep old, discard this finding)")
-        console.print("[yellow bold][e][/yellow bold] Edit decision manually")
-        console.print("[blue bold][s][/blue bold] Skip for now")
+        console.print()
+        console.print("  [bold green][ a ][/bold green] Accept new (archive old)    [bold red][ r ][/bold red] Reject new (keep old)")
+        console.print("  [bold yellow][ e ][/bold yellow] Edit manually               [bold blue][ s ][/bold blue] Skip for now")
+        console.print()
         
         while True:
-            choice = click.prompt("Choice", type=click.Choice(['a', 'r', 'e', 's']), show_choices=False).lower()
+            choice = Prompt.ask("[bold cyan]Select action[/bold cyan]", choices=["a", "r", "e", "s"], show_choices=False).lower()
             if choice == 's':
-                console.print("[dim cyan]Skipped.[/dim cyan]")
+                console.print("[dim]Skipped.[/dim]")
                 break
             elif choice == 'a':
                 resolve_decision(db_str, d['id'], 'accept', old_id=old_id)
-                console.print("[green bold]Accepted new decision.[/green bold]")
+                console.print(Panel(
+                    "[bold green]Accepted new decision. Memory updated.[/bold green]",
+                    border_style="green", expand=False
+                ))
                 break
             elif choice == 'r':
                 resolve_decision(db_str, d['id'], 'reject')
-                console.print("[red bold]Rejected new decision.[/red bold]")
+                console.print(Panel(
+                    "[bold red]Rejected new decision. Existing memory preserved.[/bold red]",
+                    border_style="red", expand=False
+                ))
                 break
             elif choice == 'e':
                 new_text = click.edit(d['decision'])
                 if new_text is not None:
                     new_text = new_text.strip()
                     resolve_decision(db_str, d['id'], 'edit', old_id=old_id, new_text=new_text)
-                    console.print("[yellow bold]Saved edited decision.[/yellow bold]")
+                    console.print(Panel(
+                        "[bold yellow]Saved edited decision. Memory updated.[/bold yellow]",
+                        border_style="yellow", expand=False
+                    ))
                     break
                 else:
                     console.print("[red]Edit cancelled. Please choose an option.[/red]")
@@ -345,7 +377,7 @@ def status():
     klyd_dir = Path('.klyd')
     db_path = klyd_dir / 'memory.db'
     if not db_path.exists():
-        console.print("[red]klyd is not initialized. Run `klyd init`.[/red]")
+        console.print("[bold red]klyd is not initialized. Run `kl init`.[/bold red]")
         return
 
     conn = sqlite3.connect(str(db_path))
@@ -358,44 +390,65 @@ def status():
 
     active = [d for d in all_decisions if d['flagged'] == 0]
     flagged = [d for d in all_decisions if d['flagged'] == 1]
+    
+    active.sort(key=lambda x: x['reinforcement_count'], reverse=True)
 
-    table = Table(title="Decision Status", box=rich.box.SIMPLE, header_style="bold cyan")
+    table = Table(box=rich.box.SIMPLE, header_style="bold cyan", show_edge=False, padding=(0, 2))
     table.add_column("ID", style="dim", max_width=8)
     table.add_column("Decision", style="white")
-    table.add_column("Module", style="blue")
+    table.add_column("Module", style="bold blue")
     table.add_column("Confidence")
     table.add_column("Event")
     table.add_column("Reinforcements", justify="right")
-    table.add_column("Flagged", justify="center")
 
-    all_display = active + flagged
-    
-    # Sort active by count desc, then put flagged at bottom or top.
-    # Let's just sort active by reinforcements and keep flagged at the top maybe? 
-    # Or just active first, then flagged.
-    active.sort(key=lambda x: x['reinforcement_count'], reverse=True)
-    all_display = active + flagged
-
-    for d in all_display:
-        conf_color = "green" if d['confidence'] == 'HIGH' else ("yellow" if d['confidence'] == 'MEDIUM' else "red")
+    for d in active:
+        conf_color = "bold bright_green" if d['confidence'] == 'HIGH' else ("bold bright_yellow" if d['confidence'] == 'MEDIUM' else "dim white")
         conf_styled = f"[{conf_color}]{d['confidence']}[/{conf_color}]"
         
-        is_flagged = d['flagged'] == 1
-        flag_styled = "[bold yellow]YES[/bold yellow]" if is_flagged else ""
-        
-        row_style = "bold yellow" if is_flagged else None
+        event_color = "bright_blue" if d.get('event_type') == 'NEW' else ("bright_magenta" if d.get('event_type') == 'REINFORCE' else "bold bright_red")
+        event_styled = f"[{event_color}]{d.get('event_type', 'NEW')}[/{event_color}]"
         
         table.add_row(
             str(d['id'])[:8],
             d['decision'],
             d['module'],
             conf_styled,
-            d.get('event_type', 'NEW'),
-            f"x{d['reinforcement_count']}",
-            flag_styled,
-            style=row_style
+            event_styled,
+            f"x{d['reinforcement_count']}"
         )
+    
+    if not active:
+        table.add_row("", "[dim]No active architectural decisions stored yet.[/dim]", "", "", "", "")
 
-    console.print(table)
-    console.print(f"[cyan]Summary:[/cyan] {len(all_decisions)} decisions, [yellow]{len(flagged)} flagged[/yellow].")
+    console.print(Panel(table, title="[bold cyan] Architectural Memory [/bold cyan]", border_style="cyan", expand=False, padding=(1, 2)))
 
+    if flagged:
+        console.print()
+        flagged_table = Table(box=rich.box.SIMPLE, show_edge=False, padding=(0, 2))
+        flagged_table.add_column("ID", style="dim", max_width=8)
+        flagged_table.add_column("Decision", style="bold white")
+        flagged_table.add_column("Module", style="bold blue")
+        flagged_table.add_column("Confidence")
+        
+        for d in flagged:
+            conf_color = "bold bright_green" if d['confidence'] == 'HIGH' else ("bold bright_yellow" if d['confidence'] == 'MEDIUM' else "dim white")
+            conf_styled = f"[{conf_color}]{d['confidence']}[/{conf_color}]"
+            
+            flagged_table.add_row(
+                str(d['id'])[:8],
+                d['decision'],
+                d['module'],
+                conf_styled
+            )
+
+        warning_panel = Panel(
+            flagged_table,
+            title="[bold white on red] NEEDS REVIEW - CONFLICTS DETECTED [/bold white on red]",
+            border_style="red",
+            expand=False,
+            padding=(1, 2)
+        )
+        console.print(warning_panel)
+
+    console.print()
+    console.print(f"[dim]Summary:[/dim] [cyan]{len(active)} active[/cyan] | [red]{len(flagged)} pending review[/red]")
