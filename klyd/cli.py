@@ -65,7 +65,7 @@ def init():
             init_db(str(db_path))
             
         console.print(Panel(
-            "✓ Klyd harness initialised in [cyan].klyd[/cyan]\n\n[dim]Installed git hooks for automatic extraction.[/dim]\n[dim]Errors are logged to .klyd/errors.log[/dim]",
+            "Klyd harness initialised in [cyan].klyd[/cyan]\n\n[dim]Installed git hooks for automatic extraction.[/dim]\n[dim]Errors are logged to .klyd/errors.log[/dim]",
             title="Success", border_style="green"
         ))
     except Exception as e:
@@ -117,7 +117,7 @@ def config(api_key, openai_key, openrouter_key, gemini_key, groq_key, model, sho
             changes = True
             
     if changes:
-        console.print(Panel("✓ Configuration saved.", border_style="green"))
+        console.print(Panel(" Configuration saved.", border_style="green"))
     else:
         console.print("[yellow]Usage:[/yellow] klyd config --api-key ... --openai-key ... --model ...\nOr use --show to display current configuration.")
 
@@ -282,7 +282,7 @@ def review():
     flagged = get_flagged_decisions(db_str)
     
     if not flagged:
-        console.print("[green bold]✓ No conflicts to review.[/green bold]")
+        console.print("[green bold] No conflicts to review.[/green bold]")
         return
 
     for d in flagged:

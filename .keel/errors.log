@@ -30,3 +30,13 @@ Traceback (most recent call last):
   File "<frozen runpy>", line 88, in _run_code
   File "C:\Users\balaj\AppData\Local\Programs\Python\Python311\Scripts\keel.exe\__main__.py", line 4, in <module>
 ModuleNotFoundError: No module named 'keel'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\balaj\AppData\Local\Programs\Python\Python311\Scripts\keel.exe\__main__.py", line 4, in <module>
+ModuleNotFoundError: No module named 'keel'
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\balaj\AppData\Local\Programs\Python\Python311\Scripts\keel.exe\__main__.py", line 4, in <module>
+ModuleNotFoundError: No module named 'keel'
