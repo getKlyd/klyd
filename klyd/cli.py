@@ -159,24 +159,20 @@ def extract_commit():
     klyd_dir = Path('.klyd')
     if not (klyd_dir / 'memory.db').exists():
         return
-        
+    
     try:
-        try:
-            diff = subprocess.check_output(['git', 'diff', 'HEAD~1', 'HEAD'], text=True)
-            msg = subprocess.check_output(['git', 'log', '-1', '--format=%B'], text=True)
-            files_out = subprocess.check_output(['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'], text=True)
-            files = [f for f in files_out.strip().split('\n') if f]
-            commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-        except subprocess.CalledProcessError:
-            diff = subprocess.check_output(['git', 'show', 'HEAD'], text=True)
-            msg = subprocess.check_output(['git', 'log', '-1', '--format=%B'], text=True)
-            files_out = subprocess.check_output(['git', 'show', '--name-only', '--format=', 'HEAD'], text=True)
-            files = [f for f in files_out.strip().split('\n') if f]
-            commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+        diff = subprocess.check_output(['git', 'show', 'HEAD'], text=True)
+        files_out = subprocess.check_output(['git', 'show', '--name-only', '--format=', 'HEAD'], text=True)
+        msg = subprocess.check_output(['git', 'log', '-1', '--format=%B'], text=True)
+        files = [f for f in files_out.strip().split('\n') if f]
+        commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+    except subprocess.CalledProcessError:
+        return
 
-        if not files:
-            return
+    if not files:
+        return
 
+    try:
         with console.status("[bold cyan]Extracting architectural decisions via LLM...[/bold cyan]", spinner="dots12"):
             db_path = str(klyd_dir / 'memory.db')
             existing = get_decisions_for_files(db_path, files, top_k=20)

@@ -8,7 +8,7 @@
 888/\          888             Y88b/         888    | 
 888  \         888              Y8Y          888    | 
 888   \        888               Y           888   /  
-888    \       888____          /            888_-~
+888    \       888____          /            888_-~   
 ```
 
 #### *An open-source project, not affiliated with the Klyd SaaS*

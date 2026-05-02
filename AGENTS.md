@@ -19,60 +19,25 @@ klyd: a CLI tool that wraps coding agents via git hooks to inject architectural 
 
 ## Hard rules
 - Two LLM calls per commit cycle maximum
-- No external dependencies beyond Click and anthropic SDK
 - Every function does one thing
 - Shell hooks are dumb — they call klyd CLI, contain no logic themselves
 - Never add a dependency to solve a problem that stdlib solves
 
-```ascii                                                                                   
-                                                                                                   
-8 8888     ,88'           8 8888                   `8.`8888.      ,8'           8 888888888o.      
-8 8888    ,88'            8 8888                    `8.`8888.    ,8'            8 8888    `^888.   
-8 8888   ,88'             8 8888                     `8.`8888.  ,8'             8 8888        `88. 
-8 8888  ,88'              8 8888                      `8.`8888.,8'              8 8888         `88 
-8 8888 ,88'               8 8888                       `8.`88888'               8 8888          88 
-8 8888 88'                8 8888                        `8. 8888                8 8888          88 
-8 888888<                 8 8888                         `8 8888                8 8888         ,88 
-8 8888 `Y8.               8 8888                          8 8888                8 8888        ,88' 
-8 8888   `Y8.             8 8888                          8 8888                8 8888    ,o88P'   
-8 8888     `Y8.           8 888888888888                  8 8888                8 888888888P'      
+## Dev commands
+- Install locally: `pip install .` or `pip install -e .`
+- CLI entry: `kl` (defined in pyproject.toml)
+- Test file: `test_db.py` (no formal test suite yet)
 
-```
+## Database
+- Schema lives at `schema/v1.sql`
+- db.py uses raw sqlite3, no ORM
 
----
+## Testing
+- Test repo: `test_task09/` (2 commits: sqlite3 then click)
+- To test: checkout each commit and run `kl extract-commit`, then check `kl status`
+- Model: `openrouter/free` works; `anthropic/*` models need OpenRouter key
 
-```ascii
-
-888  /         888           Y88b    /       888~-_   
-888 /          888            Y88b  /        888   \  
-888/\          888             Y88b/         888    | 
-888  \         888              Y8Y          888    | 
-888   \        888               Y           888   /  
-888    \       888____          /            888_-~   
-                                                                                      
-```
-
----
-
-```ascii
- __   ___       _______       _______      ___       
-|/"| /  ")     /"     "|     /"     "|    |"  |      
-(: |/   /     (: ______)    (: ______)    ||  |      
-|    __/       \/    |       \/    |      |:  |      
-(// _  \       // ___)_      // ___)_      \  |___   
-|: | \  \     (:      "|    (:      "|    ( \_|:  \  
-(__|  \__)     \_______)     \_______)     \_______)                                                   
-
-```
-
----
-
-```ascii
-
-'||'  |'     '||'         '||' '|'    '||''|.   
- || .'        ||            || |       ||   ||  
- ||'|.        ||             ||        ||    || 
- ||  ||       ||             ||        ||    || 
-.||.  ||.    .||.....|      .||.      .||...|'  
-                                                                                             
-```
+## Known issues (fixed but worth knowing)
+- First commit: use `git show HEAD` not `git diff HEAD~1 HEAD`
+- OpenRouter free tier has limited credits; monitor 402 errors
+- Model names with `/` (e.g., `anthropic/claude-3.5-sonnet`) route through OpenRouter

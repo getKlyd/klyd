@@ -44,7 +44,8 @@ Rules:
 - Only record if the diff explicitly introduces, changes, or contradicts a decision
 - Do not guess. Do not infer. Only record what is clearly shown in the diff.
 - If the commit is a style fix, test update, or minor refactor with no architectural significance: return []
-- For each decision, classify as NEW (not seen before), REINFORCE (confirms an existing decision), or CONTRADICT (conflicts with an existing decision)
+- IMPORTANT: A NEW decision should be recorded when the commit introduces a different architectural choice than previously recorded, even if both are in the same project. For example: first commit uses Click, second commit adds SQLite - these are NEW decisions about different architectural choices (CLI framework, database). Only classify as REINFORCE if the commit explicitly confirms or repeats the SAME decision (e.g., adding another Click-based command).
+- For each decision, classify as NEW (new architectural choice), REINFORCE (confirms SAME existing decision), or CONTRADICT (conflicts with an existing decision)
 - Assign confidence: HIGH (unmistakable from diff), MEDIUM (clear but could have context), LOW (possible but uncertain)
 - If this commit contradicts any of the listed invariants, set event_type to 'CONTRADICT' and add a note in the 'decision' field describing the violation. Otherwise, proceed with NEW or REINFORCE as before.
 
@@ -67,16 +68,23 @@ Existing architectural invariants (do not violate unless explicitly instructed):
 """
     try:
         # Determine provider
-        if model.startswith('claude-') or 'api_key' in config_data and not any(k in config_data for k in ['openai_key', 'openrouter_key', 'gemini_key', 'groq_key']):
-            if 'api_key' not in config_data:
-                raise ValueError("Anthropic API key is required.")
+        is_anthropic_model = model.startswith('claude-') or model.startswith('anthropic/')
+        
+        # Direct Anthropic API if we have api_key and no other keys
+        if is_anthropic_model and 'api_key' in config_data and not any(k in config_data for k in ['openai_key', 'openrouter_key', 'gemini_key', 'groq_key']):
             client = Anthropic(api_key=config_data['api_key'])
+            # Strip anthropic/ prefix if present
+            actual_model = model.replace('anthropic/', '')
             response = client.messages.create(
-                model=model,
+                model=actual_model,
                 max_tokens=1024,
                 messages=[{"role": "user", "content": prompt}]
             )
             content = response.content[0].text.strip()
+        # Use OpenRouter for Anthropic models if we have openrouter_key
+        elif is_anthropic_model and 'openrouter_key' in config_data:
+            url, key = "https://openrouter.ai/api/v1/chat/completions", config_data['openrouter_key']
+            content = _call_openai_compatible(url, key, model, prompt)
         else:
             # OpenAI compatible providers
             if model.startswith('gpt-') or model.startswith('o1') or model.startswith('o3'):
