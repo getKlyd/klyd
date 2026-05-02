@@ -1,4 +1,3 @@
-import os
 import shutil
 import stat
 from pathlib import Path

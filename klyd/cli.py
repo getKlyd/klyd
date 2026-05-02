@@ -3,17 +3,14 @@ import subprocess
 import json
 import traceback
 from .hooks import install_hooks
-from .config import init_config, set_config, get_config, get_all_config
-from .db import get_schema_path
+from .config import init_config, set_config, get_all_config
 import sqlite3
 from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.rule import Rule
 from rich.columns import Columns
 from rich.prompt import Prompt
-from rich.text import Text
 import rich.box
 
 console = Console()
@@ -130,7 +127,7 @@ def run(no_inject, cmd):
             try:
                 ctx = click.get_current_context()
                 ctx.invoke(prepare_injection)
-            except Exception as e:
+            except Exception:
                 pass
             
     run_cmd = list(cmd)
@@ -221,7 +218,7 @@ def extract_commit():
                 title="[dim]EXTRACTION COMPLETE[/dim]", border_style="dim", expand=False
             ))
 
-    except Exception as e:
+    except Exception:
         err_log = klyd_dir / 'errors.log'
         with open(err_log, 'a') as f:
             f.write(f"Error extracting commit:\n{traceback.format_exc()}\n")
@@ -256,7 +253,7 @@ def prepare_injection():
                 
         console.print(Panel("[green]Injection file ready at .klyd/injection.txt[/green]", border_style="green", expand=False))
             
-    except Exception as e:
+    except Exception:
         with open(klyd_dir / 'errors.log', 'a') as f:
             f.write(f"Error preparing injection:\n{traceback.format_exc()}\n")
         return

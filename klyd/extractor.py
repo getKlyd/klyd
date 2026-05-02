@@ -125,5 +125,5 @@ Existing architectural invariants (do not violate unless explicitly instructed):
             
         return normalized
 
-    except Exception as e:
+    except Exception:
         raise
