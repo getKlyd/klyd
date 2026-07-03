@@ -8,3 +8,4 @@ keel-test/
 __pycache__/
 .env
 .klyd/
+.aider.conf.yml
