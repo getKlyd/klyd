@@ -2,9 +2,9 @@
   <img src="https://raw.githubusercontent.com/kaadipranav/kaadipranav/refs/heads/main/assets/3.png"/>
 </div>
 
-<p>
+
 #### *An open-source project, not affiliated with the Klyd SaaS*
-</p>
+
 
 ---
 
