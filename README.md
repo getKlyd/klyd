@@ -3,7 +3,7 @@
 </div>
 
 
-#### *An open-source project, not affiliated with the Klyd SaaS*
+##### *An open-source project, not affiliated with the Klyd SaaS*
 
 
 ---
